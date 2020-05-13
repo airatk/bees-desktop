@@ -39,13 +39,15 @@ float lookAtZ = initialCenter;
 const float initialStep = 0.2;
 const float initialTurn = 0.01;
 
+const float yStep = initialStep/5.0;
+
 const float yTurn = initialTurn*20.0;
 const float maxLookAtY = 12.5;
 
-float stepPseudoX = 0.0;
-float stepPseudoY = 0.0;
+float xStep = 0.0;
+float zStep = 0.0;
 
-float xAngle = 0.0;
+float yAngle = 0.0;
 
 bool isPressedKey[256];
 
@@ -54,6 +56,7 @@ bool isPressedKey[256];
 const float initialSize = 1.0;
 const float sceneY = -4.0;
 
+const float groundLength = 20.0;
 const float groundHeight = 0.1;
 
 const float lampBaseHeight = 0.2;
@@ -61,11 +64,23 @@ const float lampPostHeight = 4.0;
 const float lampSize = 0.5;
 
 
-// Lamp values
-float lampAmbient[] = { 1.0, 1.0, 0.8, 1.0 };
-float lampDiffuse[] = { 0.8, 0.8, 0.2, 1.0 };
-float lampSpecular[] = { 1.0, 1.0, 1.0, 1.0 };
+// Lamp colors
+const float lampAmbient[] = { 1.0, 1.0, 0.8, 1.0 };
+const float lampDiffuse[] = { 0.8, 0.8, 0.2, 1.0 };
+const float lampSpecular[] = { 1.0, 1.0, 1.0, 1.0 };
 float lampPosition[] = { 0.0, 0.0, 0.0, 1.0 };
+
+const float lampAttenuation = 12.0;
+
+// Lamp post colors
+const float lampPostAmbient[] = { 0.1, 0.05, 0.025, 1.0 };
+const float lampPostDiffuse[] = { 0.4, 0.2, 0.1, 1.0 };
+const float lampPostSpecular[] = { 0.1, 0.05, 0.025, 1.0 };
+
+// Ground colors
+const float groundAmbient[] = { 0.0, 0.2, 0.0, 1.0 };
+const float groundDiffuse[] = { 0.05, 0.5, 0.05, 1.0 };
+const float groundSpecular[] = { 0.0, 0.5, 0.2, 1.0 };
 
 
 void initialise(void);
@@ -80,8 +95,9 @@ void reshape(int, int);
 
 void display(void);
 
-void drawLamp(float, float, float);
 void drawGround(float, float, float);
+void drawPath(float, float, float, float);
+void drawLamp(GLenum, float, float, float);
 
 
 int main(int argc, char** argv) {
@@ -125,12 +141,6 @@ void initialise(void) {
     
     glEnable(GL_DEPTH_TEST);
     glEnable(GL_LIGHTING);
-    
-    glLightfv(GL_LIGHT0, GL_AMBIENT, lampAmbient);
-    glLightfv(GL_LIGHT0, GL_DIFFUSE, lampDiffuse);
-    glLightfv(GL_LIGHT0, GL_SPECULAR, lampSpecular);
-    glLightf(GL_LIGHT0, GL_QUADRATIC_ATTENUATION, 12.0);
-    
     glEnable(GL_LIGHT0);
     
     glMatrixMode(GL_MODELVIEW);
@@ -152,7 +162,7 @@ void keyboardDown(unsigned char key, int x, int y) {
         
         lookFromZ += initialDistance;
         
-        xAngle = 0.0;
+        yAngle = 0.0;
     } else {
         isPressedKey[key] = true;
     }
@@ -167,15 +177,15 @@ void useKeyboard() {
     
     // Movement
     if(isPressedKey['e'] || isPressedKey['d'] || isPressedKey['s'] || isPressedKey['f']) {
-        stepPseudoY = initialStep*cos(xAngle);
-        stepPseudoX = initialStep*sin(xAngle);
+        zStep = initialStep*cos(yAngle);
+        xStep = initialStep*sin(yAngle);
     }
     
     // Rotation
     if(isPressedKey['j']) {
-        xAngle += initialTurn;
+        yAngle += initialTurn;
     } else if(isPressedKey['l']) {
-        xAngle -= initialTurn;
+        yAngle -= initialTurn;
     }
     
     
@@ -183,19 +193,25 @@ void useKeyboard() {
     
     // Movement
     if(isPressedKey['e']) {
-        lookFromZ -= stepPseudoY; lookAtZ -= stepPseudoY;
-        lookFromX -= stepPseudoX; lookAtX -= stepPseudoX;
+        lookFromZ -= zStep; lookAtZ -= zStep;
+        lookFromX -= xStep; lookAtX -= xStep;
     } else if(isPressedKey['d']) {
-        lookFromZ += stepPseudoY; lookAtZ += stepPseudoY;
-        lookFromX += stepPseudoX; lookAtX += stepPseudoX;
+        lookFromZ += zStep; lookAtZ += zStep;
+        lookFromX += xStep; lookAtX += xStep;
     }
     
     if(isPressedKey['s']) {
-        lookFromX -= stepPseudoY; lookAtX -= stepPseudoY;
-        lookFromZ += stepPseudoX; lookAtZ += stepPseudoX;
+        lookFromX -= zStep; lookAtX -= zStep;
+        lookFromZ += xStep; lookAtZ += xStep;
     } else if(isPressedKey['f']) {
-        lookFromX += stepPseudoY; lookAtX += stepPseudoY;
-        lookFromZ -= stepPseudoX; lookAtZ -= stepPseudoX;
+        lookFromX += zStep; lookAtX += zStep;
+        lookFromZ -= xStep; lookAtZ -= xStep;
+    }
+    
+    if(isPressedKey[';']) {
+        lookFromY += yStep; lookAtY += yStep;
+    } else if(isPressedKey['a']) {
+        lookFromY -= yStep; lookAtY -= yStep;
     }
     
     // Rotation
@@ -206,8 +222,8 @@ void useKeyboard() {
     }
     
     if(isPressedKey['j'] || isPressedKey['l']) {
-        lookAtX = lookFromX - initialDistance*sin(xAngle);
-        lookAtZ = lookFromZ - initialDistance*cos(xAngle);
+        lookAtX = lookFromX - initialDistance*sin(yAngle);
+        lookAtZ = lookFromZ - initialDistance*cos(yAngle);
     }
 }
 
@@ -247,7 +263,8 @@ void display(void) {
         );
         
         drawGround(0.0, sceneY, 0.0);
-        drawLamp(-9.0, sceneY + groundHeight, -9.0);
+        drawPath(6.0, 0.0, sceneY, 0.0);
+        drawLamp(GL_LIGHT0, -9.0, sceneY + groundHeight, -9.0);
     glPopMatrix();
     
     glutSwapBuffers();
@@ -256,26 +273,45 @@ void display(void) {
 
 
 void drawGround(float x, float y, float z) {
-    GLfloat groundAmbient[] = { 0.5, 1.0, 0.5, 0.5 };
-    GLfloat groundDiffuse[] = { 0.5, 1.0, 0.5, 0.1 };
+    glMaterialfv(GL_FRONT, GL_AMBIENT, groundAmbient);
+    glMaterialfv(GL_FRONT, GL_DIFFUSE, groundDiffuse);
+    glMaterialfv(GL_FRONT, GL_SPECULAR, groundSpecular);
     
     glPushMatrix();
-//        glMaterialfv(GL_FRONT, GL_AMBIENT, groundAmbient);
-//        glMaterialfv(GL_FRONT, GL_DIFFUSE, groundDiffuse);
-        
         glTranslatef(x, y + groundHeight + (initialSize - groundHeight)/2.0, z);
-        
-        glScalef(20.0, groundHeight, 20.0);
+        glScalef(groundLength, groundHeight, groundLength);
         
         glutSolidCube(initialSize);
     glPopMatrix();
 }
 
-void drawLamp(float x, float y, float z) {
+void drawPath(float width, float x, float y, float z) {
+    y += groundHeight*2.0 + (initialSize - groundHeight)/2.0;
+    
+    float pathAmbient[] = { 0.1, 0.1, 0.1 };
+    float pathDiffuse[] = { 0.6, 0.6, 0.6 };
+    float pathSpecular[] = { 0.4, 0.4, 0.4 };
+    
+    glMaterialfv(GL_FRONT, GL_AMBIENT, pathAmbient);
+    glMaterialfv(GL_FRONT, GL_DIFFUSE, pathDiffuse);
+    glMaterialfv(GL_FRONT, GL_SPECULAR, pathSpecular);
+        
+    glBegin(GL_QUADS);
+        glVertex3f(x - width/2.0, y, z - groundLength/2.0);
+        glVertex3f(x + width/2.0, y, z - groundLength/2.0);
+        glVertex3f(x + width/2.0, y, z + groundLength/2.0);
+        glVertex3f(x - width/2.0, y, z + groundLength/2.0);
+    glEnd();
+}
+
+void drawLamp(GLenum light, float x, float y, float z) {
+    glMaterialfv(GL_FRONT, GL_AMBIENT, lampPostAmbient);
+    glMaterialfv(GL_FRONT, GL_DIFFUSE, lampPostDiffuse);
+    glMaterialfv(GL_FRONT, GL_SPECULAR, lampPostSpecular);
+    
     // Base
     glPushMatrix();
         glTranslatef(x, y + lampBaseHeight + (initialSize - lampBaseHeight)/2.0, z);
-        
         glScalef(0.75, lampBaseHeight, 0.75);
         
         glutSolidCube(initialSize);
@@ -284,9 +320,8 @@ void drawLamp(float x, float y, float z) {
     // Post
     glPushMatrix();
         glTranslatef(x, y + lampBaseHeight + lampPostHeight + (initialSize - lampPostHeight)/2.0, z);
+        glScalef(0.2, lampPostHeight, 0.2);
         
-        glScalef(0.225, lampPostHeight, 0.225);
-
         glutSolidCube(initialSize);
     glPopMatrix();
     
@@ -295,16 +330,20 @@ void drawLamp(float x, float y, float z) {
     lampPosition[1] = y + lampBaseHeight + lampPostHeight + lampSize*2.0;
     lampPosition[2] = z;
     
-    glLightfv(GL_LIGHT0, GL_POSITION, lampPosition);
+    glLightfv(light, GL_AMBIENT, lampAmbient);
+    glLightfv(light, GL_DIFFUSE, lampDiffuse);
+    glLightfv(light, GL_SPECULAR, lampSpecular);
+    glLightfv(light, GL_POSITION, lampPosition);
+    glLightf(light, GL_QUADRATIC_ATTENUATION, lampAttenuation);
+    
+    glMaterialfv(GL_FRONT, GL_AMBIENT, lampAmbient);
+    glMaterialfv(GL_FRONT, GL_DIFFUSE, lampDiffuse);
+    glMaterialfv(GL_FRONT, GL_SPECULAR, lampSpecular);
     
     glPushMatrix();
+        glTranslatef(lampPosition[0], lampPosition[1], lampPosition[2]);
+        
         glPushAttrib(GL_LIGHTING_BIT);
-            glMaterialfv(GL_FRONT, GL_AMBIENT, lampAmbient);
-            glMaterialfv(GL_FRONT, GL_DIFFUSE, lampDiffuse);
-            glMaterialfv(GL_FRONT, GL_SPECULAR, lampSpecular);
-            
-            glTranslatef(lampPosition[0], lampPosition[1], lampPosition[2]);
-            
             glutSolidSphere(lampSize, 20, 20);
         glPopAttrib();
     glPopMatrix();

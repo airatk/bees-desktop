@@ -29,8 +29,8 @@
 		60741679246A9D5A00FFEF80 /* main.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = main.cpp; sourceTree = "<group>"; };
 		60741681246A9D6900FFEF80 /* OpenGL.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = OpenGL.framework; path = System/Library/Frameworks/OpenGL.framework; sourceTree = SDKROOT; };
 		60741683246A9D7100FFEF80 /* GLUT.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = GLUT.framework; path = System/Library/Frameworks/GLUT.framework; sourceTree = SDKROOT; };
-		60741685246A9F6C00FFEF80 /* bees.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = bees.png; path = ../bees.png; sourceTree = "<group>"; };
-		60741686246A9F6C00FFEF80 /* README.md */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = net.daringfireball.markdown; name = README.md; path = ../README.md; sourceTree = "<group>"; };
+		6092868B24715B820011BA8F /* bees.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = bees.png; sourceTree = "<group>"; };
+		6092868C24715B830011BA8F /* README.md */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = net.daringfireball.markdown; path = README.md; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -49,8 +49,8 @@
 		6074166D246A9D5A00FFEF80 = {
 			isa = PBXGroup;
 			children = (
-				60741686246A9F6C00FFEF80 /* README.md */,
-				60741685246A9F6C00FFEF80 /* bees.png */,
+				6092868C24715B830011BA8F /* README.md */,
+				6092868B24715B820011BA8F /* bees.png */,
 				60741678246A9D5A00FFEF80 /* Bees */,
 				60741677246A9D5A00FFEF80 /* Products */,
 				60741680246A9D6900FFEF80 /* Frameworks */,

@@ -59,28 +59,32 @@ const float sceneY = -4.0;
 const float groundLength = 20.0;
 const float groundHeight = 0.1;
 
+const float curbHeight = 0.2;
+
 const float lampBaseHeight = 0.2;
 const float lampPostHeight = 4.0;
 const float lampSize = 0.5;
 
-
-// Lamp colors
-const float lampAmbient[] = { 1.0, 1.0, 0.8, 1.0 };
-const float lampDiffuse[] = { 0.8, 0.8, 0.2, 1.0 };
-const float lampSpecular[] = { 1.0, 1.0, 1.0, 1.0 };
 float lampPosition[] = { 0.0, 0.0, 0.0, 1.0 };
 
+
+// Colors
+const float lampAmbient[] = { 1.0, 1.0, 0.8, 1.0 };
+const float lampDiffuse[] = { 0.8, 0.8, 0.2, 1.0 };
+const float lampSpecular[] = { 1.0, 1.0, 0.8, 1.0 };
 const float lampAttenuation = 12.0;
 
-// Lamp post colors
 const float lampPostAmbient[] = { 0.1, 0.05, 0.025, 1.0 };
 const float lampPostDiffuse[] = { 0.4, 0.2, 0.1, 1.0 };
 const float lampPostSpecular[] = { 0.1, 0.05, 0.025, 1.0 };
 
-// Ground colors
 const float groundAmbient[] = { 0.0, 0.2, 0.0, 1.0 };
 const float groundDiffuse[] = { 0.05, 0.5, 0.05, 1.0 };
 const float groundSpecular[] = { 0.0, 0.5, 0.2, 1.0 };
+
+const float pathAmbient[] = { 0.1, 0.1, 0.1 };
+const float pathDiffuse[] = { 0.6, 0.6, 0.6 };
+const float pathSpecular[] = { 0.4, 0.4, 0.4 };
 
 
 void initialise(void);
@@ -96,7 +100,7 @@ void reshape(int, int);
 void display(void);
 
 void drawGround(float, float, float);
-void drawPath(float, float, float, float);
+void drawSidewalk(float, float, float, float);
 void drawLamp(GLenum, float, float, float);
 
 
@@ -125,7 +129,7 @@ int main(int argc, char** argv) {
     glutKeyboardUpFunc(keyboardUp);
     
     glutCreateMenu(menu);
-    glutAddMenuEntry("Turn off lamp", 0);
+    glutAddMenuEntry("Turn off lamps", 0);
     glutAttachMenu(GLUT_RIGHT_BUTTON);
     
     initialise();
@@ -142,6 +146,7 @@ void initialise(void) {
     glEnable(GL_DEPTH_TEST);
     glEnable(GL_LIGHTING);
     glEnable(GL_LIGHT0);
+    glEnable(GL_LIGHT1);
     
     glMatrixMode(GL_MODELVIEW);
     glLoadIdentity();
@@ -231,14 +236,16 @@ void useKeyboard() {
 void menu(int option) {
     switch(option) {
         case 0: {
-            if(glIsEnabled(GL_LIGHT0)) {
+            if(glIsEnabled(GL_LIGHT0) || glIsEnabled(GL_LIGHT1)) {
                 glDisable(GL_LIGHT0);
+                glDisable(GL_LIGHT1);
                 
-                glutChangeToMenuEntry(1, "Turn on lamp", 0);
+                glutChangeToMenuEntry(1, "Turn on lamps", 0);
             } else {
                 glEnable(GL_LIGHT0);
+                glEnable(GL_LIGHT1);
                 
-                glutChangeToMenuEntry(1, "Turn off lamp", 0);
+                glutChangeToMenuEntry(1, "Turn off lamps", 0);
             }
         } break;
     }
@@ -263,8 +270,9 @@ void display(void) {
         );
         
         drawGround(0.0, sceneY, 0.0);
-        drawPath(6.0, 0.0, sceneY, 0.0);
-        drawLamp(GL_LIGHT0, -9.0, sceneY + groundHeight, -9.0);
+        drawSidewalk(6.0, 0.0, sceneY, 0.0);
+        drawLamp(GL_LIGHT0, -4.5, sceneY + groundHeight, -6.0);
+        drawLamp(GL_LIGHT1, 4.5, sceneY + groundHeight, 6.0);
     glPopMatrix();
     
     glutSwapBuffers();
@@ -285,23 +293,36 @@ void drawGround(float x, float y, float z) {
     glPopMatrix();
 }
 
-void drawPath(float width, float x, float y, float z) {
+void drawSidewalk(float width, float x, float y, float z) {
     y += groundHeight*2.0 + (initialSize - groundHeight)/2.0;
-    
-    float pathAmbient[] = { 0.1, 0.1, 0.1 };
-    float pathDiffuse[] = { 0.6, 0.6, 0.6 };
-    float pathSpecular[] = { 0.4, 0.4, 0.4 };
     
     glMaterialfv(GL_FRONT, GL_AMBIENT, pathAmbient);
     glMaterialfv(GL_FRONT, GL_DIFFUSE, pathDiffuse);
     glMaterialfv(GL_FRONT, GL_SPECULAR, pathSpecular);
-        
+    
+    // Sidewalk
     glBegin(GL_QUADS);
         glVertex3f(x - width/2.0, y, z - groundLength/2.0);
         glVertex3f(x + width/2.0, y, z - groundLength/2.0);
         glVertex3f(x + width/2.0, y, z + groundLength/2.0);
         glVertex3f(x - width/2.0, y, z + groundLength/2.0);
     glEnd();
+    
+    // Left curb
+    glPushMatrix();
+        glTranslatef(x - width/2.0, y + curbHeight/2.0, z);
+        glScalef(0.75, curbHeight, groundLength);
+        
+        glutSolidCube(initialSize);
+    glPopMatrix();
+    
+    // Right curb
+    glPushMatrix();
+        glTranslatef(x + width/2.0, y + curbHeight/2.0, z);
+        glScalef(0.75, curbHeight, groundLength);
+        
+        glutSolidCube(initialSize);
+    glPopMatrix();
 }
 
 void drawLamp(GLenum light, float x, float y, float z) {

@@ -102,6 +102,7 @@ void display(void);
 void drawGround(float, float, float);
 void drawSidewalk(float, float, float, float);
 void drawLamp(GLenum, float, float, float);
+void drawBee(void);
 
 
 int main(int argc, char** argv) {
@@ -273,6 +274,12 @@ void display(void) {
         drawSidewalk(6.0, 0.0, sceneY, 0.0);
         drawLamp(GL_LIGHT0, -4.5, sceneY + groundHeight, -6.0);
         drawLamp(GL_LIGHT1, 4.5, sceneY + groundHeight, 6.0);
+        
+        glPushMatrix();
+            glRotatef(90.0, 0.0, 1.0, 0.0);
+            
+            drawBee();
+        glPopMatrix();
     glPopMatrix();
     
     glutSwapBuffers();
@@ -368,4 +375,51 @@ void drawLamp(GLenum light, float x, float y, float z) {
             glutSolidSphere(lampSize, 20, 20);
         glPopAttrib();
     glPopMatrix();
+}
+
+void drawBee(void) {
+    const float beeAmbient[] = { 0.5, 0.5, 1.0 };
+    const float beeDiffuse[] = { 0.5, 0.5, 1.0 };
+    const float beeSpecular[] = { 0.5, 0.5, 1.0 };
+    
+    glMaterialfv(GL_FRONT, GL_AMBIENT, beeAmbient);
+    glMaterialfv(GL_FRONT, GL_DIFFUSE, beeDiffuse);
+    glMaterialfv(GL_FRONT, GL_SPECULAR, beeSpecular);
+    
+    // Face
+    glPushMatrix();
+        glTranslatef(0.0, 0.0, 0.25);
+        
+        glutSolidSphere(0.5, 20, 20);
+    glPopMatrix();
+    
+    // Head
+    glPushMatrix();
+        glRotatef(90.0, 0.0, 0.0, 1.0);
+        glScalef(0.4, 0.45, 0.4);
+        
+        glutSolidDodecahedron();
+    glPopMatrix();
+    
+    // Body
+    glPushMatrix();
+        glRotatef(-10.0, 1.0, 0.0, 0.0);
+        
+        for(float i = 0.0, z = -0.6; i < 4.0; i++, z -= 0.3) {
+            glPushMatrix();
+                glTranslatef(0.0, 0.0, z);
+                
+                glutSolidTorus(0.2, 0.25, 8, 20);
+            glPopMatrix();
+        }
+    glPopMatrix();
+    
+    // String
+    
+    
+    // Wings
+    
+    
+    // Legs
+    
 }

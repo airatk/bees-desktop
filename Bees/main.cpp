@@ -9,10 +9,8 @@
 
 #define GL_SILENCE_DEPRECATION
 
-#include <iostream>  // TODO: Remove this line
-#include <cmath>
-
 #include <GLUT/glut.h>
+#include <cmath>
 
 
 // Window values
@@ -24,7 +22,7 @@ const float windowRatio = windowWidth/windowHeight;
 
 // View values
 const float initialCenter = 0.0;
-const float initialDistance = 17.5;  // > 0.0
+const float initialDistance = 17.5;  // 0.0 < initialDistance
 
 float lookFromX = initialCenter;
 float lookFromY = initialCenter;
@@ -37,9 +35,9 @@ float lookAtZ = initialCenter;
 
 // Movement & rotation values
 const float initialStep = 0.15;
-const float initialTurn = 0.015;
+const float initialTurn = 1.0;
 
-const float yStep = initialStep/5.0;
+const float yStep = initialStep/3.0;
 
 const float yTurn = initialTurn*20.0;
 const float maxLookAtY = 12.5;
@@ -71,13 +69,14 @@ float lampPosition[] = { 0.0, 0.0, 0.0, 1.0 };
 
 
 // Animation values
-float flapper = 0.0;  // 0.0 <= flapper <=360.0
+float flapper = 0.0;  // 0.0 <= flapper <= 360.0
+float mover = 0.0;  // 0.0 <= mover <= 360.0
 
 
 // Colors
-const float lampAmbient[] = { 1.0, 1.0, 0.8, 1.0 };
-const float lampDiffuse[] = { 0.8, 0.8, 0.2, 1.0 };
-const float lampSpecular[] = { 1.0, 1.0, 0.8, 1.0 };
+const float lampAmbient[] = { 1.0, 1.0, 0.7, 1.0 };
+const float lampDiffuse[] = { 0.8, 0.8, 0.4, 1.0 };
+const float lampSpecular[] = { 1.0, 1.0, 0.7, 1.0 };
 const float lampAttenuation = 12.0;
 
 const float lampPostAmbient[] = { 0.1, 0.05, 0.025, 1.0 };
@@ -111,7 +110,6 @@ const float beeWingsSpecular[] = { 0.6, 1.0, 1.0 };
 
 void initialise(void);
 
-void motion(int, int);
 void keyboardDown(unsigned char, int, int);
 void keyboardUp(unsigned char, int, int);
 void useKeyboard();
@@ -125,7 +123,9 @@ void drawGround(float, float, float);
 void drawSidewalk(float, float, float, float);
 void drawLamp(GLenum, float, float, float);
 void drawBee(void);
-void drawWing(Wing wing);
+void drawWing(Wing);
+
+float degrees(float);
 
 
 int main(int argc, char** argv) {
@@ -148,7 +148,6 @@ int main(int argc, char** argv) {
     
     glutReshapeFunc(reshape);
     
-    glutMotionFunc(motion);
     glutKeyboardFunc(keyboardDown);
     glutKeyboardUpFunc(keyboardUp);
     
@@ -179,10 +178,6 @@ void initialise(void) {
 }
 
 
-void motion(int x, int y) {
-    // TODO: Implement motion()
-}
-
 void keyboardDown(unsigned char key, int x, int y) {
     // Reseting values if 'q' is pressed
     if(key == 'q') {
@@ -206,8 +201,8 @@ void useKeyboard() {
     
     // Movement
     if(isPressedKey['e'] || isPressedKey['d'] || isPressedKey['s'] || isPressedKey['f']) {
-        zStep = initialStep*cos(yAngle);
-        xStep = initialStep*sin(yAngle);
+        zStep = initialStep*cos(degrees(yAngle));
+        xStep = initialStep*sin(degrees(yAngle));
     }
     
     // Rotation
@@ -245,14 +240,14 @@ void useKeyboard() {
     
     // Rotation
     if(isPressedKey['i'] && (lookAtY <= maxLookAtY)) {
-        lookAtY += yTurn;
+        lookAtY += degrees(yTurn);
     } else if(isPressedKey['k'] && (lookAtY >= -maxLookAtY)) {
-        lookAtY -= yTurn;
+        lookAtY -= degrees(yTurn);
     }
     
     if(isPressedKey['j'] || isPressedKey['l']) {
-        lookAtX = lookFromX - initialDistance*sin(yAngle);
-        lookAtZ = lookFromZ - initialDistance*cos(yAngle);
+        lookAtX = lookFromX - initialDistance*sin(degrees(yAngle));
+        lookAtZ = lookFromZ - initialDistance*cos(degrees(yAngle));
     }
 }
 
@@ -272,6 +267,8 @@ void menu(int option) {
                 glutChangeToMenuEntry(1, "Turn off lamps", 0);
             }
         } break;
+        
+        default: {}
     }
 }
 
@@ -293,14 +290,27 @@ void display(void) {
             0.0, 1.0, 0.0
         );
         
+        // Ground
         drawGround(0.0, sceneY, 0.0);
         drawSidewalk(6.0, 0.0, sceneY, 0.0);
-        drawLamp(GL_LIGHT0, -4.5, sceneY + groundHeight, -6.0);
-        drawLamp(GL_LIGHT1, 4.5, sceneY + groundHeight, 6.0);
+        
+        // Lamps
+        drawLamp(GL_LIGHT0, -4.0, sceneY + groundHeight, -8.0);
+        drawLamp(GL_LIGHT1, 4.0, sceneY + groundHeight, 8.0);
+        
+        // Bees
+        (mover >= 360.0) ? mover = 0.0 : mover += 1.0;
         
         glPushMatrix();
-            //glTranslatef(0.0, 0.0, 8.0);
-            //glRotatef(90.0, 0.0, 1.0, 0.0);
+            glTranslatef(5.0*cos(degrees(mover)) - 4.0, 2.0, 5.0*sin(degrees(mover)) + 2.0);
+            glRotatef(-mover, 0.0, 1.0, 0.0);
+            
+            drawBee();
+        glPopMatrix();
+        
+        glPushMatrix();
+            glTranslatef(-5.0*cos(degrees(mover)) + 4.0, -1.0, -5.0*sin(degrees(mover)) - 2.0);
+            glRotatef(-mover - 180.0, 0.0, 1.0, 0.0);
             
             drawBee();
         glPopMatrix();
@@ -325,7 +335,7 @@ void drawGround(float x, float y, float z) {
 }
 
 void drawSidewalk(float width, float x, float y, float z) {
-    y += groundHeight*2.0 + (initialSize - groundHeight)/2.0;
+    y += curbHeight + (initialSize - curbHeight)/2.0;
     
     glMaterialfv(GL_FRONT, GL_AMBIENT, pathAmbient);
     glMaterialfv(GL_FRONT, GL_DIFFUSE, pathDiffuse);
@@ -333,10 +343,10 @@ void drawSidewalk(float width, float x, float y, float z) {
     
     // Sidewalk
     glBegin(GL_QUADS);
-        glVertex3f(x - width/2.0, y, z - groundLength/2.0);
-        glVertex3f(x + width/2.0, y, z - groundLength/2.0);
-        glVertex3f(x + width/2.0, y, z + groundLength/2.0);
-        glVertex3f(x - width/2.0, y, z + groundLength/2.0);
+        glVertex3f(x - width/2.0, y + 0.01, z - groundLength/2.0);
+        glVertex3f(x + width/2.0, y + 0.01, z - groundLength/2.0);
+        glVertex3f(x + width/2.0, y + 0.01, z + groundLength/2.0);
+        glVertex3f(x - width/2.0, y + 0.01, z + groundLength/2.0);
     glEnd();
     
     // Left curb
@@ -395,9 +405,7 @@ void drawLamp(GLenum light, float x, float y, float z) {
     glPushMatrix();
         glTranslatef(lampPosition[0], lampPosition[1], lampPosition[2]);
         
-        glPushAttrib(GL_LIGHTING_BIT);
-            glutSolidSphere(lampSize, 20, 20);
-        glPopAttrib();
+        glutSolidSphere(lampSize, 20, 20);
     glPopMatrix();
 }
 
@@ -466,10 +474,6 @@ void drawBee(void) {
     glPopMatrix();
     
     // Wings
-    glMaterialfv(GL_FRONT, GL_AMBIENT, beeWingsAmbient);
-    glMaterialfv(GL_FRONT, GL_DIFFUSE, beeWingsDiffuse);
-    glMaterialfv(GL_FRONT, GL_SPECULAR, beeWingsSpecular);
-    
     drawWing(Wing::Right);
     drawWing(Wing::Left);
 }
@@ -480,20 +484,29 @@ void drawWing(Wing wing) {
     switch(wing) {
         case Wing::Right: inverter = -1.0; break;
         case Wing::Left: inverter = 1.0; break;
+        
+        default: {}
     }
     
-    flapper += 4.0;
+    (flapper >= 360.0) ? flapper = 0.0 : flapper += 40.0;
     
-    if(flapper >= 360.0) { flapper = 0.0; }
+    glMaterialfv(GL_FRONT, GL_AMBIENT, beeWingsAmbient);
+    glMaterialfv(GL_FRONT, GL_DIFFUSE, beeWingsDiffuse);
+    glMaterialfv(GL_FRONT, GL_SPECULAR, beeWingsSpecular);
     
     glPushMatrix();
-        glRotatef(10.0*sin(flapper)*inverter, 0.0, 0.0, 1.0);
-        glRotatef(-80.0*inverter, 0.0, 1.0, 0.0);
+        glRotatef(10.0, 1.0, 0.0, 0.0);  // Forward tilt
+        glRotatef(15.0*sin(degrees(flapper))*inverter, 0.0, 0.0, 1.0);  // Flapping animation
+        glRotatef(-75.0*inverter, 0.0, 1.0, 0.0);  // Opened wings
         
         glBegin(GL_POLYGON);
-            for(float t = -1.0; t <= 1.0; t += 0.1) {
-                glVertex3f((1.5*cos(t) - 1.0)*inverter, 0.5, sin(t) - 1.0);
+            for(float t = -90.0; t <= 90.0; t += 3.0) {
+                glVertex3f((0.65*cos(degrees(t)) - 0.15)*inverter, 0.45, sin(degrees(t)) - 1.0);
             }
         glEnd();
     glPopMatrix();
+}
+
+float degrees(float radians) {
+    return radians*M_PI/180.0;
 }

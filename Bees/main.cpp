@@ -24,7 +24,7 @@ const float windowRatio = windowWidth/windowHeight;
 
 // View values
 const float initialCenter = 0.0;
-const float initialDistance = 17.5;  // Has to be greater than 0.0
+const float initialDistance = 17.5;  // > 0.0
 
 float lookFromX = initialCenter;
 float lookFromY = initialCenter;
@@ -36,8 +36,8 @@ float lookAtZ = initialCenter;
 
 
 // Movement & rotation values
-const float initialStep = 0.2;
-const float initialTurn = 0.01;
+const float initialStep = 0.15;
+const float initialTurn = 0.015;
 
 const float yStep = initialStep/5.0;
 
@@ -65,7 +65,13 @@ const float lampBaseHeight = 0.2;
 const float lampPostHeight = 4.0;
 const float lampSize = 0.5;
 
+enum class Wing { Right, Left };
+
 float lampPosition[] = { 0.0, 0.0, 0.0, 1.0 };
+
+
+// Animation values
+float flapper = 0.0;  // 0.0 <= flapper <=360.0
 
 
 // Colors
@@ -86,6 +92,22 @@ const float pathAmbient[] = { 0.1, 0.1, 0.1 };
 const float pathDiffuse[] = { 0.6, 0.6, 0.6 };
 const float pathSpecular[] = { 0.4, 0.4, 0.4 };
 
+const float beeBlackAmbient[] = { 0.0, 0.0, 0.0 };
+const float beeBlackDiffuse[] = { 0.25, 0.25, 0.25 };
+const float beeBlackSpecular[] = { 0.3, 0.3, 0.3 };
+
+const float beeYellowAmbient[] = { 0.4, 0.4, 0.0 };
+const float beeYellowDiffuse[] = { 0.8, 0.8, 0.0 };
+const float beeYellowSpecular[] = { 1.0, 1.0, 0.0 };
+
+const float beeWhiteAmbient[] = { 0.3, 0.3, 0.3 };
+const float beeWhiteDiffuse[] = { 0.6, 0.6, 0.6 };
+const float beeWhiteSpecular[] = { 0.8, 0.8, 0.8 };
+
+const float beeWingsAmbient[] = { 0.4, 0.6, 1.0 };
+const float beeWingsDiffuse[] = { 0.4, 0.6, 1.0 };
+const float beeWingsSpecular[] = { 0.6, 1.0, 1.0 };
+
 
 void initialise(void);
 
@@ -103,6 +125,7 @@ void drawGround(float, float, float);
 void drawSidewalk(float, float, float, float);
 void drawLamp(GLenum, float, float, float);
 void drawBee(void);
+void drawWing(Wing wing);
 
 
 int main(int argc, char** argv) {
@@ -276,7 +299,8 @@ void display(void) {
         drawLamp(GL_LIGHT1, 4.5, sceneY + groundHeight, 6.0);
         
         glPushMatrix();
-            glRotatef(90.0, 0.0, 1.0, 0.0);
+            //glTranslatef(0.0, 0.0, 8.0);
+            //glRotatef(90.0, 0.0, 1.0, 0.0);
             
             drawBee();
         glPopMatrix();
@@ -378,22 +402,22 @@ void drawLamp(GLenum light, float x, float y, float z) {
 }
 
 void drawBee(void) {
-    const float beeAmbient[] = { 0.5, 0.5, 1.0 };
-    const float beeDiffuse[] = { 0.5, 0.5, 1.0 };
-    const float beeSpecular[] = { 0.5, 0.5, 1.0 };
-    
-    glMaterialfv(GL_FRONT, GL_AMBIENT, beeAmbient);
-    glMaterialfv(GL_FRONT, GL_DIFFUSE, beeDiffuse);
-    glMaterialfv(GL_FRONT, GL_SPECULAR, beeSpecular);
-    
     // Face
+    glMaterialfv(GL_FRONT, GL_AMBIENT, beeWhiteAmbient);
+    glMaterialfv(GL_FRONT, GL_DIFFUSE, beeWhiteDiffuse);
+    glMaterialfv(GL_FRONT, GL_SPECULAR, beeWhiteSpecular);
+    
     glPushMatrix();
-        glTranslatef(0.0, 0.0, 0.25);
+        glTranslatef(0.0, 0.0, 0.3);
         
         glutSolidSphere(0.5, 20, 20);
     glPopMatrix();
     
     // Head
+    glMaterialfv(GL_FRONT, GL_AMBIENT, beeBlackAmbient);
+    glMaterialfv(GL_FRONT, GL_DIFFUSE, beeBlackDiffuse);
+    glMaterialfv(GL_FRONT, GL_SPECULAR, beeBlackSpecular);
+    
     glPushMatrix();
         glRotatef(90.0, 0.0, 0.0, 1.0);
         glScalef(0.4, 0.45, 0.4);
@@ -405,21 +429,71 @@ void drawBee(void) {
     glPushMatrix();
         glRotatef(-10.0, 1.0, 0.0, 0.0);
         
-        for(float i = 0.0, z = -0.6; i < 4.0; i++, z -= 0.3) {
+        int bodyUnitCounter = 0;
+        bool isBodyUnitYellow = true;
+        float bodyUnitZ = -0.6;
+        float bodyUnitRadius = 0.3;
+        
+        for(; bodyUnitCounter < 4; bodyUnitCounter++, isBodyUnitYellow = !isBodyUnitYellow, bodyUnitZ -= 0.3, bodyUnitRadius -= 0.05) {
+            if(isBodyUnitYellow) {
+                glMaterialfv(GL_FRONT, GL_AMBIENT, beeYellowAmbient);
+                glMaterialfv(GL_FRONT, GL_DIFFUSE, beeYellowDiffuse);
+                glMaterialfv(GL_FRONT, GL_SPECULAR, beeYellowSpecular);
+            } else {
+                glMaterialfv(GL_FRONT, GL_AMBIENT, beeBlackAmbient);
+                glMaterialfv(GL_FRONT, GL_DIFFUSE, beeBlackDiffuse);
+                glMaterialfv(GL_FRONT, GL_SPECULAR, beeBlackSpecular);
+            }
+            
             glPushMatrix();
-                glTranslatef(0.0, 0.0, z);
+                glTranslatef(0.0, 0.0, bodyUnitZ);
                 
-                glutSolidTorus(0.2, 0.25, 8, 20);
+                glutSolidTorus(0.2, bodyUnitRadius, 8, 20);
             glPopMatrix();
         }
     glPopMatrix();
     
-    // String
+    // Sting
+    glMaterialfv(GL_FRONT, GL_AMBIENT, beeWhiteAmbient);
+    glMaterialfv(GL_FRONT, GL_DIFFUSE, beeWhiteDiffuse);
+    glMaterialfv(GL_FRONT, GL_SPECULAR, beeWhiteSpecular);
     
+    glPushMatrix();
+        glTranslatef(0.0, -0.3, -1.6);
+        glRotatef(180.0, 1.0, 0.0, 0.0);
+        
+        glutSolidCone(0.2, 0.6, 10, 10);
+    glPopMatrix();
     
     // Wings
+    glMaterialfv(GL_FRONT, GL_AMBIENT, beeWingsAmbient);
+    glMaterialfv(GL_FRONT, GL_DIFFUSE, beeWingsDiffuse);
+    glMaterialfv(GL_FRONT, GL_SPECULAR, beeWingsSpecular);
     
+    drawWing(Wing::Right);
+    drawWing(Wing::Left);
+}
+
+void drawWing(Wing wing) {
+    float inverter = 0.0;
     
-    // Legs
+    switch(wing) {
+        case Wing::Right: inverter = -1.0; break;
+        case Wing::Left: inverter = 1.0; break;
+    }
     
+    flapper += 4.0;
+    
+    if(flapper >= 360.0) { flapper = 0.0; }
+    
+    glPushMatrix();
+        glRotatef(10.0*sin(flapper)*inverter, 0.0, 0.0, 1.0);
+        glRotatef(-80.0*inverter, 0.0, 1.0, 0.0);
+        
+        glBegin(GL_POLYGON);
+            for(float t = -1.0; t <= 1.0; t += 0.1) {
+                glVertex3f((1.5*cos(t) - 1.0)*inverter, 0.5, sin(t) - 1.0);
+            }
+        glEnd();
+    glPopMatrix();
 }

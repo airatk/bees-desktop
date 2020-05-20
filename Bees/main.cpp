@@ -72,6 +72,9 @@ float lampPosition[] = { 0.0, 0.0, 0.0, 1.0 };
 float flapper = 0.0;  // 0.0 <= flapper <= 360.0
 float mover = 0.0;  // 0.0 <= mover <= 360.0
 
+const float flappingVelocity = 40.0;
+const float movingVelocity = 1.0;
+
 
 // Colors
 const float lampAmbient[] = { 1.0, 1.0, 0.7, 1.0 };
@@ -299,7 +302,7 @@ void display(void) {
         drawLamp(GL_LIGHT1, 4.0, sceneY + groundHeight, 8.0);
         
         // Bees
-        (mover >= 360.0) ? mover = 0.0 : mover += 1.0;
+        (mover >= 360.0) ? mover = 0.0 : mover += movingVelocity;
         
         glPushMatrix();
             glTranslatef(5.0*cos(degrees(mover)) - 4.0, 2.0, 5.0*sin(degrees(mover)) + 2.0);
@@ -488,7 +491,7 @@ void drawWing(Wing wing) {
         default: {}
     }
     
-    (flapper >= 360.0) ? flapper = 0.0 : flapper += 40.0;
+    (flapper >= 360.0) ? flapper = 0.0 : flapper += flappingVelocity;
     
     glMaterialfv(GL_FRONT, GL_AMBIENT, beeWingsAmbient);
     glMaterialfv(GL_FRONT, GL_DIFFUSE, beeWingsDiffuse);

@@ -9,8 +9,13 @@
 
 #define GL_SILENCE_DEPRECATION
 
+
 #include <GLUT/glut.h>
 #include <cmath>
+
+#ifndef M_PI
+#define M_PI 3.14159
+#endif
 
 
 // Window values
@@ -128,7 +133,7 @@ void drawLamp(GLenum, float, float, float);
 void drawBee(void);
 void drawWing(Wing);
 
-float degrees(float);
+float radians(float);
 
 
 int main(int argc, char** argv) {
@@ -204,8 +209,8 @@ void useKeyboard() {
     
     // Movement
     if(isPressedKey['e'] || isPressedKey['d'] || isPressedKey['s'] || isPressedKey['f']) {
-        zStep = initialStep*cos(degrees(yAngle));
-        xStep = initialStep*sin(degrees(yAngle));
+        zStep = initialStep*cos(radians(yAngle));
+        xStep = initialStep*sin(radians(yAngle));
     }
     
     // Rotation
@@ -243,14 +248,14 @@ void useKeyboard() {
     
     // Rotation
     if(isPressedKey['i'] && (lookAtY <= maxLookAtY)) {
-        lookAtY += degrees(yTurn);
+        lookAtY += radians(yTurn);
     } else if(isPressedKey['k'] && (lookAtY >= -maxLookAtY)) {
-        lookAtY -= degrees(yTurn);
+        lookAtY -= radians(yTurn);
     }
     
     if(isPressedKey['j'] || isPressedKey['l']) {
-        lookAtX = lookFromX - initialDistance*sin(degrees(yAngle));
-        lookAtZ = lookFromZ - initialDistance*cos(degrees(yAngle));
+        lookAtX = lookFromX - initialDistance*sin(radians(yAngle));
+        lookAtZ = lookFromZ - initialDistance*cos(radians(yAngle));
     }
 }
 
@@ -305,14 +310,14 @@ void display(void) {
         (mover >= 360.0) ? mover = 0.0 : mover += movingVelocity;
         
         glPushMatrix();
-            glTranslatef(5.0*cos(degrees(mover)) - 4.0, 2.0, 5.0*sin(degrees(mover)) + 2.0);
+            glTranslatef(5.0*cos(radians(mover)) - 4.0, 2.0, 5.0*sin(radians(mover)) + 2.0);
             glRotatef(-mover, 0.0, 1.0, 0.0);
             
             drawBee();
         glPopMatrix();
         
         glPushMatrix();
-            glTranslatef(-5.0*cos(degrees(mover)) + 4.0, -1.0, -5.0*sin(degrees(mover)) - 2.0);
+            glTranslatef(-5.0*cos(radians(mover)) + 4.0, -1.0, -5.0*sin(radians(mover)) - 2.0);
             glRotatef(-mover - 180.0, 0.0, 1.0, 0.0);
             
             drawBee();
@@ -499,17 +504,17 @@ void drawWing(Wing wing) {
     
     glPushMatrix();
         glRotatef(10.0, 1.0, 0.0, 0.0);  // Forward tilt
-        glRotatef(15.0*sin(degrees(flapper))*inverter, 0.0, 0.0, 1.0);  // Flapping animation
+        glRotatef(15.0*sin(radians(flapper))*inverter, 0.0, 0.0, 1.0);  // Flapping animation
         glRotatef(-75.0*inverter, 0.0, 1.0, 0.0);  // Opened wings
         
         glBegin(GL_POLYGON);
             for(float t = -90.0; t <= 90.0; t += 3.0) {
-                glVertex3f((0.65*cos(degrees(t)) - 0.15)*inverter, 0.45, sin(degrees(t)) - 1.0);
+                glVertex3f((0.65*cos(radians(t)) - 0.15)*inverter, 0.45, sin(radians(t)) - 1.0);
             }
         glEnd();
     glPopMatrix();
 }
 
-float degrees(float radians) {
-    return radians*M_PI/180.0;
+float radians(float degrees) {
+    return (degrees/180.0)*M_PI;
 }

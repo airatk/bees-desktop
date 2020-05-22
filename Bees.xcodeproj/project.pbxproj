@@ -108,7 +108,7 @@
 		6074166E246A9D5A00FFEF80 /* Project object */ = {
 			isa = PBXProject;
 			attributes = {
-				LastUpgradeCheck = 1140;
+				LastUpgradeCheck = 1150;
 				ORGANIZATIONNAME = "Airat K";
 				TargetAttributes = {
 					60741675246A9D5A00FFEF80 = {
@@ -258,6 +258,7 @@
 		6074167E246A9D5A00FFEF80 /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
+				CODE_SIGN_IDENTITY = "-";
 				CODE_SIGN_STYLE = Automatic;
 				DEVELOPMENT_TEAM = LFA8M8P3Z8;
 				ENABLE_HARDENED_RUNTIME = YES;
@@ -268,6 +269,7 @@
 		6074167F246A9D5A00FFEF80 /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
+				CODE_SIGN_IDENTITY = "-";
 				CODE_SIGN_STYLE = Automatic;
 				DEVELOPMENT_TEAM = LFA8M8P3Z8;
 				ENABLE_HARDENED_RUNTIME = YES;

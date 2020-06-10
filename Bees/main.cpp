@@ -18,14 +18,14 @@
 #endif
 
 
-// Window values
+// Значения окна: ширина, высота, отношение сторон
 const float windowWidth = 1200.0;
 const float windowHeight = 600.0;
 
 const float windowRatio = windowWidth/windowHeight;
 
 
-// View values
+// Значения перспективной проекции
 const float initialCenter = 0.0;
 const float initialDistance = 17.5;  // 0.0 < initialDistance
 
@@ -38,7 +38,7 @@ float lookAtY = initialCenter;
 float lookAtZ = initialCenter;
 
 
-// Movement & rotation values
+// Значения перемещения и поворота камеры
 const float initialStep = 0.15;
 const float initialTurn = 1.0;
 
@@ -55,7 +55,7 @@ float yAngle = 0.0;
 bool isPressedKey[256];
 
 
-// Scene values
+// Значения объектов сцены
 const float initialSize = 1.0;
 const float sceneY = -4.0;
 
@@ -73,15 +73,15 @@ enum class Wing { Right, Left };
 float lampPosition[] = { 0.0, 0.0, 0.0, 1.0 };
 
 
-// Animation values
+// Значения анимации
 float flapper = 0.0;  // 0.0 <= flapper <= 360.0
 float mover = 0.0;  // 0.0 <= mover <= 360.0
 
-const float flappingVelocity = 40.0;
-const float movingVelocity = 1.0;
+const float flappingVelocity = 4.0;
+const float movingVelocity = 0.1;
 
 
-// Colors
+// Параметры материалов
 const float lampAmbient[] = { 1.0, 1.0, 0.7, 1.0 };
 const float lampDiffuse[] = { 0.8, 0.8, 0.4, 1.0 };
 const float lampSpecular[] = { 1.0, 1.0, 0.7, 1.0 };
@@ -116,14 +116,13 @@ const float beeWingsDiffuse[] = { 0.4, 0.6, 1.0 };
 const float beeWingsSpecular[] = { 0.6, 1.0, 1.0 };
 
 
+// Объявления функций
 void initialise(void);
 
 void keyboardDown(unsigned char, int, int);
 void keyboardUp(unsigned char, int, int);
 void useKeyboard();
 void menu(int);
-
-void reshape(int, int);
 
 void display(void);
 
@@ -136,12 +135,17 @@ void drawWing(Wing);
 float radians(float);
 
 
+// Главная функция
 int main(int argc, char** argv) {
+    // Инициализация GLUT
     glutInit(&argc, argv);
     
+    // Инициализация режима дисплея
     glutInitDisplayMode(GLUT_DOUBLE | GLUT_RGB | GLUT_DEPTH);
+    // Инициализация рамера окна
     glutInitWindowSize(windowWidth, windowHeight);
     
+    // Расположение окна в центре экрана
     int screenWidth = glutGet(GLUT_SCREEN_WIDTH);
     int screenHeight = glutGet(GLUT_SCREEN_HEIGHT);
     
@@ -150,44 +154,59 @@ int main(int argc, char** argv) {
     
     glutInitWindowPosition(windowPositionX, windowPositionY);
     
-    glutCreateWindow("Bees");
+    // Создание окна
+    glutCreateWindow("Пчёлы");
     
+    // Инициализация функции перерисовки
     glutDisplayFunc(display);
     
-    glutReshapeFunc(reshape);
-    
+    // Инициализация функций обработки нажатия клавиш
     glutKeyboardFunc(keyboardDown);
     glutKeyboardUpFunc(keyboardUp);
     
+    // Инициализация меню
     glutCreateMenu(menu);
-    glutAddMenuEntry("Turn off lamps", 0);
+    // Добавление в меню одного элемента: "Выключить лампы"
+    glutAddMenuEntry("Выключить лампы", 0);
+    // Добавление поддержки вызова меню по нажатии ПКМ
     glutAttachMenu(GLUT_RIGHT_BUTTON);
     
+    // Вызов функции инициализации сцены
     initialise();
     
+    // Запуск основного цикла GLUT
     glutMainLoop();
     
+    // Выход из программы с кодом 0
     return 0;
 }
 
 
 void initialise(void) {
+    // Инициализация значений отчистки буферов цветов
     glClearColor(0.0, 0.0, 0.0, 1.0);
     
+    // Включение теста глубины
     glEnable(GL_DEPTH_TEST);
+    // Включение освещения
     glEnable(GL_LIGHTING);
+    // Включение источников света GL_LIGHT0, GL_LIGHT1
     glEnable(GL_LIGHT0);
     glEnable(GL_LIGHT1);
     
+    // Задание режима матрицы GL_MODELVIEW
     glMatrixMode(GL_MODELVIEW);
+    // Установка единичной матрицы
     glLoadIdentity();
     
+    // Установка матрицы перспективной проекции
     gluPerspective(60.0, windowRatio, 1.0, 30.0);
 }
 
 
+// Функция обработки нажатия клавиши
 void keyboardDown(unsigned char key, int x, int y) {
-    // Reseting values if 'q' is pressed
+    // Возврат камеры в исходное положение в случае нажатия клавиши 'q'
     if(key == 'q') {
         lookAtX = lookAtY = lookAtZ = initialCenter;
         lookFromX = lookFromY = lookFromZ = initialCenter;
@@ -200,20 +219,22 @@ void keyboardDown(unsigned char key, int x, int y) {
     }
 }
 
+// Функция обработки отжатия клавиши
 void keyboardUp(unsigned char key, int x, int y) {
     isPressedKey[key] = false;
 }
 
+// Функция поддержки нажатия нескольких клавиш одновременно
 void useKeyboard() {
-    // Calculating movement & rotation
+    // Расчёт перемещения и поворота камеры
     
-    // Movement
+    // Перемещение
     if(isPressedKey['e'] || isPressedKey['d'] || isPressedKey['s'] || isPressedKey['f']) {
         zStep = initialStep*cos(radians(yAngle));
         xStep = initialStep*sin(radians(yAngle));
     }
     
-    // Rotation
+    // Вращение
     if(isPressedKey['j']) {
         yAngle += initialTurn;
     } else if(isPressedKey['l']) {
@@ -221,9 +242,9 @@ void useKeyboard() {
     }
     
     
-    // Applying movement & rotation
+    // Применение расчётов перемещения и поворота камеры
     
-    // Movement
+    // Перемещение
     if(isPressedKey['e']) {
         lookFromZ -= zStep; lookAtZ -= zStep;
         lookFromX -= xStep; lookAtX -= xStep;
@@ -246,7 +267,7 @@ void useKeyboard() {
         lookFromY -= yStep; lookAtY -= yStep;
     }
     
-    // Rotation
+    // Поворот
     if(isPressedKey['i'] && (lookAtY <= maxLookAtY)) {
         lookAtY += radians(yTurn);
     } else if(isPressedKey['k'] && (lookAtY >= -maxLookAtY)) {
@@ -260,19 +281,24 @@ void useKeyboard() {
 }
 
 
+// Функция обработки нажатия элементов меню
 void menu(int option) {
     switch(option) {
         case 0: {
             if(glIsEnabled(GL_LIGHT0) || glIsEnabled(GL_LIGHT1)) {
+                // Выключение ламп в случае нажатия элемента меню "Выключить лампы"
                 glDisable(GL_LIGHT0);
                 glDisable(GL_LIGHT1);
                 
-                glutChangeToMenuEntry(1, "Turn on lamps", 0);
+                // Замена элемента меню "Выключить лампы" на "Включить лампы"
+                glutChangeToMenuEntry(1, "Включить лампы", 0);
             } else {
+                // Включение ламп в случае нажатия элемента меню "Включить лампы"
                 glEnable(GL_LIGHT0);
                 glEnable(GL_LIGHT1);
                 
-                glutChangeToMenuEntry(1, "Turn off lamps", 0);
+                // Замена элемента меню "Включить лампы" на "Выключить лампы"
+                glutChangeToMenuEntry(1, "Выключить лампы", 0);
             }
         } break;
         
@@ -281,75 +307,90 @@ void menu(int option) {
 }
 
 
-void reshape(int width, int height) {
-    (windowRatio > width/height) ? glViewport(0, 0, width, width/windowRatio) : glViewport(0, 0, height*windowRatio, height);
-}
-
-
+// Функция перерисовки
 void display(void) {
+    // Очистка буферов к начальным значениям
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
     
+    // Вызов функции поддержки нажатия нескольких клавиш одновременно
     useKeyboard();
     
     glPushMatrix();
+        // Определение положения и просмотра камеры
         gluLookAt(
             lookFromX, lookFromY, lookFromZ,
             lookAtX, lookAtY, lookAtZ,
             0.0, 1.0, 0.0
         );
         
-        // Ground
+        // Вызов функции отрисовки земли
         drawGround(0.0, sceneY, 0.0);
+        // Вызов функции отрисовки дорожки
         drawSidewalk(6.0, 0.0, sceneY, 0.0);
         
-        // Lamps
+        // Вызов функции отрисовки лампы для источников света GL_LIGHT0, GL_LIGHT1
         drawLamp(GL_LIGHT0, -4.0, sceneY + groundHeight, -8.0);
         drawLamp(GL_LIGHT1, 4.0, sceneY + groundHeight, 8.0);
         
-        // Bees
+        // Изменение переменной движения пчёл
         (mover >= 360.0) ? mover = 0.0 : mover += movingVelocity;
         
         glPushMatrix();
+            // Анимация перемещения пчелы 1
             glTranslatef(5.0*cos(radians(mover)) - 4.0, 2.0, 5.0*sin(radians(mover)) + 2.0);
+            // Анимация поворота пчелы 1
             glRotatef(-mover, 0.0, 1.0, 0.0);
             
+            // Вызов функции отрисовки пчелы для пчелы 1
             drawBee();
         glPopMatrix();
         
         glPushMatrix();
+            // Анимация перемещения пчелы 2
             glTranslatef(-5.0*cos(radians(mover)) + 4.0, -1.0, -5.0*sin(radians(mover)) - 2.0);
+            // Анимация поворота пчелы 2
             glRotatef(-mover - 180.0, 0.0, 1.0, 0.0);
             
+            // Вызов функции отрисовки пчелы для пчелы 2
             drawBee();
         glPopMatrix();
     glPopMatrix();
     
+    // Перестановка буферов
     glutSwapBuffers();
+    // Принудительная перерисовка окна
     glutPostRedisplay();
 }
 
 
+// Функция вызова отрисовки земли, реализованной кубом
 void drawGround(float x, float y, float z) {
+    // Наложение материала на куб
     glMaterialfv(GL_FRONT, GL_AMBIENT, groundAmbient);
     glMaterialfv(GL_FRONT, GL_DIFFUSE, groundDiffuse);
     glMaterialfv(GL_FRONT, GL_SPECULAR, groundSpecular);
     
     glPushMatrix();
+        // Перемещение куба
         glTranslatef(x, y + groundHeight + (initialSize - groundHeight)/2.0, z);
+        // Изменение размера куба
         glScalef(groundLength, groundHeight, groundLength);
         
+        // Куб
         glutSolidCube(initialSize);
     glPopMatrix();
 }
 
+// Функция отрисовки дорожки, реализованной 2D-примитивом четырёхугольник
 void drawSidewalk(float width, float x, float y, float z) {
     y += curbHeight + (initialSize - curbHeight)/2.0;
     
+    // Наложение материала на четырёхугольник
     glMaterialfv(GL_FRONT, GL_AMBIENT, pathAmbient);
     glMaterialfv(GL_FRONT, GL_DIFFUSE, pathDiffuse);
     glMaterialfv(GL_FRONT, GL_SPECULAR, pathSpecular);
     
-    // Sidewalk
+    // Четырёхугольник, реализованный 4 точками в пространстве
     glBegin(GL_QUADS);
         glVertex3f(x - width/2.0, y + 0.01, z - groundLength/2.0);
         glVertex3f(x + width/2.0, y + 0.01, z - groundLength/2.0);
@@ -357,92 +398,120 @@ void drawSidewalk(float width, float x, float y, float z) {
         glVertex3f(x - width/2.0, y + 0.01, z + groundLength/2.0);
     glEnd();
     
-    // Left curb
+    // Левый бордюр, реализованный кубом
     glPushMatrix();
+        // Перемещение куба
         glTranslatef(x - width/2.0, y + curbHeight/2.0, z);
+        // Изменение размера куба
         glScalef(0.75, curbHeight, groundLength);
         
+        // Куб
         glutSolidCube(initialSize);
     glPopMatrix();
     
-    // Right curb
+    // Правый бордюр, реализованный кубом
     glPushMatrix();
+        // Перемещение куба
         glTranslatef(x + width/2.0, y + curbHeight/2.0, z);
+        // Изменение размера куба
         glScalef(0.75, curbHeight, groundLength);
         
+        // Куб
         glutSolidCube(initialSize);
     glPopMatrix();
 }
 
+// Функция отрисовки лампы, реализованной сферой и кубами
 void drawLamp(GLenum light, float x, float y, float z) {
+    // Наложение материала на кубы
     glMaterialfv(GL_FRONT, GL_AMBIENT, lampPostAmbient);
     glMaterialfv(GL_FRONT, GL_DIFFUSE, lampPostDiffuse);
     glMaterialfv(GL_FRONT, GL_SPECULAR, lampPostSpecular);
     
-    // Base
+    // Основа ламы, реализованная кубом
     glPushMatrix();
+        // Перемещение куба
         glTranslatef(x, y + lampBaseHeight + (initialSize - lampBaseHeight)/2.0, z);
+        // Изменение размера куба
         glScalef(0.75, lampBaseHeight, 0.75);
         
+        // Куб
         glutSolidCube(initialSize);
     glPopMatrix();
     
-    // Post
+    // Столб лампы, реализованный кубом
     glPushMatrix();
+        // Перемещение куба
         glTranslatef(x, y + lampBaseHeight + lampPostHeight + (initialSize - lampPostHeight)/2.0, z);
+        // Изменение размера куба
         glScalef(0.2, lampPostHeight, 0.2);
         
+        // Куб
         glutSolidCube(initialSize);
     glPopMatrix();
     
-    // Lamp
+    // Задание положения лампы
     lampPosition[0] = x;
     lampPosition[1] = y + lampBaseHeight + lampPostHeight + lampSize*2.0;
     lampPosition[2] = z;
     
+    // Задание параметров источника света в лампе
     glLightfv(light, GL_AMBIENT, lampAmbient);
     glLightfv(light, GL_DIFFUSE, lampDiffuse);
     glLightfv(light, GL_SPECULAR, lampSpecular);
     glLightfv(light, GL_POSITION, lampPosition);
     glLightf(light, GL_QUADRATIC_ATTENUATION, lampAttenuation);
     
+    // Наложение материала на сферу
     glMaterialfv(GL_FRONT, GL_AMBIENT, lampAmbient);
     glMaterialfv(GL_FRONT, GL_DIFFUSE, lampDiffuse);
     glMaterialfv(GL_FRONT, GL_SPECULAR, lampSpecular);
     
+    // Лампа, реализованная сферой
     glPushMatrix();
+        // Перемещение сферы
         glTranslatef(lampPosition[0], lampPosition[1], lampPosition[2]);
         
+        // Сфера
         glutSolidSphere(lampSize, 20, 20);
     glPopMatrix();
 }
 
+// Функция отрисовки пчелы, реализованной сферой, додекаэдром, торами, конусом и 2D-примитивами полигонами
 void drawBee(void) {
-    // Face
+    // Наложение материала на сферу
     glMaterialfv(GL_FRONT, GL_AMBIENT, beeWhiteAmbient);
     glMaterialfv(GL_FRONT, GL_DIFFUSE, beeWhiteDiffuse);
     glMaterialfv(GL_FRONT, GL_SPECULAR, beeWhiteSpecular);
     
+    // Голова пчелы, реализованная сферой
     glPushMatrix();
+        // Перемещение сферы
         glTranslatef(0.0, 0.0, 0.3);
         
+        // Сфера
         glutSolidSphere(0.5, 20, 20);
     glPopMatrix();
     
-    // Head
+    // Наложение материала на додекаэдр
     glMaterialfv(GL_FRONT, GL_AMBIENT, beeBlackAmbient);
     glMaterialfv(GL_FRONT, GL_DIFFUSE, beeBlackDiffuse);
     glMaterialfv(GL_FRONT, GL_SPECULAR, beeBlackSpecular);
     
+    // Связующее звено между головой и телом пчелы, реализованное додекаэдром
     glPushMatrix();
+        // Перемещение додекаэдра
         glRotatef(90.0, 0.0, 0.0, 1.0);
+        // Изменения размера додекаэдра
         glScalef(0.4, 0.45, 0.4);
         
+        // Додекаэдр
         glutSolidDodecahedron();
     glPopMatrix();
     
-    // Body
+    // Тело пчелы, реализованное торами
     glPushMatrix();
+        // Поворот торов
         glRotatef(-10.0, 1.0, 0.0, 0.0);
         
         int bodyUnitCounter = 0;
@@ -450,7 +519,9 @@ void drawBee(void) {
         float bodyUnitZ = -0.6;
         float bodyUnitRadius = 0.3;
         
+        // Отрисовка торов циклом с постепенным уменьшением размера торов
         for(; bodyUnitCounter < 4; bodyUnitCounter++, isBodyUnitYellow = !isBodyUnitYellow, bodyUnitZ -= 0.3, bodyUnitRadius -= 0.05) {
+            // Попеременное наложение жёлтого и чёрного материалов на торы
             if(isBodyUnitYellow) {
                 glMaterialfv(GL_FRONT, GL_AMBIENT, beeYellowAmbient);
                 glMaterialfv(GL_FRONT, GL_DIFFUSE, beeYellowDiffuse);
@@ -462,33 +533,41 @@ void drawBee(void) {
             }
             
             glPushMatrix();
+                // Перемещение тора
                 glTranslatef(0.0, 0.0, bodyUnitZ);
                 
+                // Тор
                 glutSolidTorus(0.2, bodyUnitRadius, 8, 20);
             glPopMatrix();
         }
     glPopMatrix();
     
-    // Sting
+    // Наложение материала на конус
     glMaterialfv(GL_FRONT, GL_AMBIENT, beeWhiteAmbient);
     glMaterialfv(GL_FRONT, GL_DIFFUSE, beeWhiteDiffuse);
     glMaterialfv(GL_FRONT, GL_SPECULAR, beeWhiteSpecular);
     
+    // Жало пчелы, реализованное конусом
     glPushMatrix();
+        // Перемещение конуса
         glTranslatef(0.0, -0.3, -1.6);
+        // Поворот конуса
         glRotatef(180.0, 1.0, 0.0, 0.0);
         
+        // Конус
         glutSolidCone(0.2, 0.6, 10, 10);
     glPopMatrix();
     
-    // Wings
+    // Вызов функции отрисовки крыла для левого крыла и правого крыла
     drawWing(Wing::Right);
     drawWing(Wing::Left);
 }
 
+// Функция отрисовки крыла
 void drawWing(Wing wing) {
     float inverter = 0.0;
     
+    // Выбор крыла
     switch(wing) {
         case Wing::Right: inverter = -1.0; break;
         case Wing::Left: inverter = 1.0; break;
@@ -496,17 +575,24 @@ void drawWing(Wing wing) {
         default: {}
     }
     
+    // Изменение переменной движения крыльев
     (flapper >= 360.0) ? flapper = 0.0 : flapper += flappingVelocity;
     
+    // Наложение материалов на 2D-примитив полигон
     glMaterialfv(GL_FRONT, GL_AMBIENT, beeWingsAmbient);
     glMaterialfv(GL_FRONT, GL_DIFFUSE, beeWingsDiffuse);
     glMaterialfv(GL_FRONT, GL_SPECULAR, beeWingsSpecular);
     
+    // Крыло, реализованное 2D-примитивом полигон в форме полукруга
     glPushMatrix();
-        glRotatef(10.0, 1.0, 0.0, 0.0);  // Forward tilt
-        glRotatef(15.0*sin(radians(flapper))*inverter, 0.0, 0.0, 1.0);  // Flapping animation
-        glRotatef(-75.0*inverter, 0.0, 1.0, 0.0);  // Opened wings
+        // Наклон полигона
+        glRotatef(10.0, 1.0, 0.0, 0.0);
+        // Анимация взмахов
+        glRotatef(15.0*sin(radians(flapper))*inverter, 0.0, 0.0, 1.0);
+        // Раскрытие крыла
+        glRotatef(-75.0*inverter, 0.0, 1.0, 0.0);
         
+        // Полигон из точек в пространстве, отрисованных циклом по полукругу
         glBegin(GL_POLYGON);
             for(float t = -90.0; t <= 90.0; t += 3.0) {
                 glVertex3f((0.65*cos(radians(t)) - 0.15)*inverter, 0.45, sin(radians(t)) - 1.0);
@@ -515,6 +601,7 @@ void drawWing(Wing wing) {
     glPopMatrix();
 }
 
+// Функция перевода градусов в радианы
 float radians(float degrees) {
     return (degrees/180.0)*M_PI;
 }
